@@ -4,6 +4,9 @@ import (
 	"hash"
 	"hash/fnv"
 	"math"
+	"io"
+	"bytes"
+	"encoding/binary"
 )
 
 // BloomFilter implements a classic Bloom filter. A Bloom filter has a non-zero
@@ -107,6 +110,66 @@ func (b *BloomFilter) TestAndAdd(data []byte) bool {
 	return member
 }
 
+func (b *BloomFilter) WriteTo(stream io.Writer) (int64, error) {
+	err := binary.Write(stream, binary.BigEndian, uint64(b.count))
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(stream, binary.BigEndian, uint64(b.m))
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(stream, binary.BigEndian, uint64(b.k))
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(stream, binary.BigEndian, b.buckets)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(stream, binary.BigEndian, b.hash)
+	if err != nil {
+		return 0, err
+	}
+
+	return 1, nil
+}
+
+func (b *BloomFilter) ReadFrom(stream io.Reader) (int64, error) {
+
+	var count, m, k uint
+	var buckets Buckets
+	var hash hash.Hash64
+	err := binary.Read(stream, binary.BigEndian, &count)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Read(stream, binary.BigEndian, &m)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Read(stream, binary.BigEndian, &k)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Read(stream, binary.BigEndian, &buckets)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Read(stream, binary.BigEndian, &hash)
+	if err != nil {
+		return 0, err
+	}
+
+	b.buckets = &buckets
+	b.hash = hash
+	b.m = m
+	b.k = k
+	b.count = count
+
+	return 1, nil
+}
+
 // Reset restores the Bloom filter to its original state. It returns the filter
 // to allow for chaining.
 func (b *BloomFilter) Reset() *BloomFilter {
@@ -118,4 +181,23 @@ func (b *BloomFilter) Reset() *BloomFilter {
 // For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
 func (b *BloomFilter) SetHash(h hash.Hash64) {
 	b.hash = h
+}
+
+// GobEncode implements gob.GobEncoder interface.
+func (b *BloomFilter) GobEncode() ([]byte, error) {
+	var buf bytes.Buffer
+	_, err := b.WriteTo(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// GobDecode implements gob.GobDecoder interface.
+func (b *BloomFilter) GobDecode(data []byte) error {
+	buf := bytes.NewBuffer(data)
+	_, err := b.ReadFrom(buf)
+
+	return err
 }

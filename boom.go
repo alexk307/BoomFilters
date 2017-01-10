@@ -40,6 +40,7 @@ import (
 	"encoding/binary"
 	"hash"
 	"math"
+	"io"
 )
 
 const fillRatio = 0.5
@@ -58,6 +59,10 @@ type Filter interface {
 	// TestAndAdd is equivalent to calling Test followed by Add. It returns
 	// true if the data is a member, false if not.
 	TestAndAdd([]byte) bool
+
+	WriteTo(stream io.Writer) (int64, error)
+
+	ReadFrom(stream io.Reader) (int64, error)
 }
 
 // OptimalM calculates the optimal Bloom filter size, m, based on the number of

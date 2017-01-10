@@ -3,6 +3,7 @@ package boom
 import (
 	"hash"
 	"hash/fnv"
+	"io"
 )
 
 // DeletableBloomFilter implements a Deletable Bloom Filter as described by
@@ -123,6 +124,14 @@ func (d *DeletableBloomFilter) TestAndAdd(data []byte) bool {
 
 	d.count++
 	return member
+}
+
+func (d *DeletableBloomFilter) WriteTo(stream io.Writer) (int64, error) {
+	return 1, nil
+}
+
+func (d *DeletableBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
+	return 1, nil
 }
 
 // TestAndRemove will test for membership of the data and remove it from the

@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"math"
 	"math/rand"
+	"io"
 )
 
 // StableBloomFilter implements a Stable Bloom Filter as described by Deng and
@@ -182,6 +183,14 @@ func (s *StableBloomFilter) TestAndAdd(data []byte) bool {
 	}
 
 	return member
+}
+
+func (s *StableBloomFilter) WriteTo(stream io.Writer) (int64, error) {
+	return 1, nil
+}
+
+func (s *StableBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
+	return 1, nil
 }
 
 // Reset restores the Stable Bloom Filter to its original state. It returns the

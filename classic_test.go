@@ -3,6 +3,8 @@ package boom
 import (
 	"strconv"
 	"testing"
+	"bytes"
+	"encoding/gob"
 )
 
 // Ensures that Capacity returns the number of bits, m, in the Bloom filter.
@@ -128,6 +130,39 @@ func TestBloomReset(t *testing.T) {
 			t.Error("Expected all bits to be unset")
 		}
 	}
+}
+
+type FakeWriter struct {
+	data []byte
+}
+func (f *FakeWriter) Write(p []byte) (n int, err error) {
+	f.data = p
+	return len(p), nil
+}
+
+type FakeReader struct {
+	data []byte
+}
+func (f *FakeReader) Read(p []byte) (n int, err error) {
+	for i, d := range(f.data) {
+		p[i] = d
+	}
+	return len(p), nil
+}
+
+func TestBloomWriteTo(t *testing.T) {
+	f := NewBloomFilter(100, 0.1)
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestBloomReadFrom(t *testing.T) {
+	//f := NewBloomFilter(100, 0.1)
+
+
 }
 
 func BenchmarkBloomAdd(b *testing.B) {

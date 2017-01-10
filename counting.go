@@ -3,6 +3,7 @@ package boom
 import (
 	"hash"
 	"hash/fnv"
+	"io"
 )
 
 // CountingBloomFilter implements a Counting Bloom Filter as described by Fan,
@@ -117,6 +118,14 @@ func (c *CountingBloomFilter) TestAndAdd(data []byte) bool {
 
 	c.count++
 	return member
+}
+
+func (c *CountingBloomFilter) WriteTo(stream io.Writer) (int64, error) {
+	return 1, nil
+}
+
+func (c *CountingBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
+	return 1, nil
 }
 
 // TestAndRemove will test for membership of the data and remove it from the

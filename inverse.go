@@ -38,6 +38,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"unsafe"
+	"io"
 )
 
 // InverseBloomFilter is a concurrent "inverse" Bloom filter, which is
@@ -98,6 +99,14 @@ func (i *InverseBloomFilter) Add(data []byte) Filter {
 func (i *InverseBloomFilter) TestAndAdd(data []byte) bool {
 	oldID := i.getAndSet(i.index(data), data)
 	return bytes.Equal(oldID, data)
+}
+
+func (i *InverseBloomFilter) WriteTo(stream io.Writer) (int64, error) {
+	return 1, nil
+}
+
+func (i *InverseBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
+	return 1, nil
 }
 
 // Capacity returns the filter capacity.
